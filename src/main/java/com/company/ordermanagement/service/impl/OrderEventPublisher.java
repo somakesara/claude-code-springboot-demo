@@ -4,14 +4,20 @@ import com.company.ordermanagement.model.event.CustomerCreatedEvent;
 import com.company.ordermanagement.model.event.OrderCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+// ConditionalOnBean: only wired when Kafka is active (kafka profile).
+// Without Kafka, domain events are still published via ApplicationEventPublisher
+// but are simply not forwarded to a broker — the DB writes still succeed.
+// This lets the demo run Java-only with no broker required.
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnBean(KafkaTemplate.class)
 public class OrderEventPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;

@@ -3,7 +3,9 @@ package com.company.ordermanagement.service.impl;
 import com.company.ordermanagement.model.entity.Payment;
 import com.company.ordermanagement.repository.PaymentRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -18,6 +20,7 @@ import java.util.UUID;
 //   3. PII risk: the logged paymentEvent map may contain paymentMethod with card data
 @Service
 @Slf4j
+@ConditionalOnBean(KafkaTemplate.class)
 public class RetryablePaymentService {
 
     // BUG 1: field injection — should be constructor injection

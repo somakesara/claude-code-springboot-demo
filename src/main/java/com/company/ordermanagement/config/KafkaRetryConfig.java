@@ -1,7 +1,7 @@
 package com.company.ordermanagement.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -11,6 +11,7 @@ import org.springframework.util.backoff.ExponentialBackOff;
 
 @Slf4j
 @Configuration
+@ConditionalOnBean(KafkaTemplate.class)
 public class KafkaRetryConfig {
 
     // Activity 3 (Code Review) — Retry mechanism for payment events.

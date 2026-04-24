@@ -2,8 +2,9 @@ spring:
   application:
     name: order-management-service
 
+  # ── Database: H2 in-memory (default — no Docker, no setup, Java only) ────────
   datasource:
-    url: jdbc:h2:mem:ordermanagement;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    url: jdbc:h2:mem:ordermanagement;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;NON_KEYWORDS=VALUE
     username: sa
     password:
     driver-class-name: org.h2.Driver
@@ -15,26 +16,23 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
-        format_sql: true
+        format_sql: false
 
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    locations: classpath:db/migration/h2
 
-  kafka:
-    bootstrap-servers: localhost:9092
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.add.type.headers: false
-    consumer:
-      group-id: order-management-service
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "com.company.ordermanagement.model.event"
+  # ── Kafka: disabled by default — demo runs Java-only ─────────────────────────
+  # Kafka beans are still compiled (needed for Activity 3 code review demo)
+  # but the broker connection is never attempted at startup.
+  # Enable by activating the 'kafka' profile: -Dspring.profiles.active=kafka
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
 
 order:
   max-total: 50000
@@ -52,3 +50,4 @@ logging:
   level:
     com.company.ordermanagement: INFO
     org.springframework.kafka: WARN
+    org.flywaydb: WARN
