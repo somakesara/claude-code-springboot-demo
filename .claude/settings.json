@@ -1,0 +1,68 @@
+{
+  "_comment": "Claude Code settings for Order Management Service demo project.",
+  "_comment2": "Scoped tool allowlist reduces blast radius of autonomous agent actions.",
+  "_comment3": "Hooks: .sh files run via Git Bash on Windows (requires Git for Windows on PATH). .bat equivalents in same directory for machines without Git Bash.",
+
+  "allowedTools": [
+    "Read",
+    "Edit",
+    "Write",
+    "Glob",
+    "Grep",
+    "Bash"
+  ],
+
+  "denyTools": [
+    "WebFetch",
+    "WebSearch"
+  ],
+
+  "allowedBashCommands": [
+    "mvn compile",
+    "mvn test",
+    "mvn clean test",
+    "mvn clean verify",
+    "mvn spring-boot:run",
+    "mvn dependency:tree",
+    "mvn jacoco:report",
+    "mvn flyway:validate",
+    "mvn flyway:info",
+    "git status",
+    "git diff",
+    "git diff --staged",
+    "git add",
+    "git commit",
+    "git log",
+    "git log --oneline",
+    "git branch",
+    "git stash",
+    "grep",
+    "find . -name",
+    "wc -l"
+  ],
+
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post_tool_use_compile.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre_tool_use_guardrail.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InventoryAuditLog.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Order Management Service</a> &gt; <a href="index.source.html" class="el_package">com.company.ordermanagement.model.entity</a> &gt; <span class="el_source">InventoryAuditLog.java</span></div><h1>InventoryAuditLog.java</h1><pre class="source lang-java linenums">package com.company.ordermanagement.model.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = &quot;inventory_audit_log&quot;)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class InventoryAuditLog extends BaseEntity {
+
+    @Column(name = &quot;inventory_item_id&quot;, nullable = false)
+    private UUID inventoryItemId;
+
+    @Column(name = &quot;product_sku&quot;, nullable = false)
+    private String productSku;
+
+    @Column(name = &quot;change_type&quot;, nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ChangeType changeType;
+
+    @Column(name = &quot;quantity_before&quot;, nullable = false)
+    private int quantityBefore;
+
+    @Column(name = &quot;quantity_after&quot;, nullable = false)
+    private int quantityAfter;
+
+    @Column(name = &quot;delta&quot;, nullable = false)
+    private int delta;
+
+    @Column(name = &quot;reference_id&quot;)
+    private UUID referenceId;
+
+    @Column(name = &quot;reference_type&quot;)
+    private String referenceType;
+
+    @Column(name = &quot;notes&quot;)
+    private String notes;
+
+    @Column(name = &quot;recorded_at&quot;, nullable = false)
+    private Instant recordedAt;
+
+<span class="nc" id="L49">    public enum ChangeType {</span>
+<span class="nc" id="L50">        RECEIVED, RESERVED, RELEASED, ADJUSTED, SHIPPED, RETURNED, DAMAGED</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

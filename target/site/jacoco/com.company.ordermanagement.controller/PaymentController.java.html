@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaymentController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Order Management Service</a> &gt; <a href="index.source.html" class="el_package">com.company.ordermanagement.controller</a> &gt; <span class="el_source">PaymentController.java</span></div><h1>PaymentController.java</h1><pre class="source lang-java linenums">package com.company.ordermanagement.controller;
+
+import com.company.ordermanagement.model.dto.response.ApiResponse;
+import com.company.ordermanagement.model.entity.Payment;
+import com.company.ordermanagement.service.PaymentService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+@RestController
+@RequestMapping(&quot;/api/v1/payments&quot;)
+@RequiredArgsConstructor
+public class PaymentController {
+
+    private final PaymentService paymentService;
+
+    @PostMapping(&quot;/orders/{orderId}&quot;)
+    @PreAuthorize(&quot;hasRole('USER')&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;Payment&gt;&gt; processPayment(
+            @PathVariable UUID orderId,
+            @RequestParam BigDecimal amount,
+            @RequestParam String paymentMethod) {
+<span class="nc" id="L28">        Payment payment = paymentService.processPayment(orderId, amount, paymentMethod);</span>
+<span class="nc" id="L29">        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(payment));</span>
+    }
+
+    @GetMapping(&quot;/{paymentId}&quot;)
+    @PreAuthorize(&quot;hasRole('USER')&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;Payment&gt;&gt; getPayment(@PathVariable UUID paymentId) {
+<span class="nc" id="L35">        return ResponseEntity.ok(ApiResponse.ok(paymentService.getPayment(paymentId)));</span>
+    }
+
+    // Activity 2 — this endpoint triggers the bug in PaymentServiceImpl.processRefund()
+    // Stack trace: PaymentController.java:45 → PaymentServiceImpl.java:87
+    @PostMapping(&quot;/{paymentId}/refund&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;Payment&gt;&gt; processRefund(   // line 45
+            @PathVariable UUID paymentId) {
+<span class="nc" id="L44">        Payment refund = paymentService.processRefund(paymentId);</span>
+<span class="nc" id="L45">        return ResponseEntity.ok(ApiResponse.ok(refund, &quot;Refund processed&quot;));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

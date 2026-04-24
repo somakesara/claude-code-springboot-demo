@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaymentServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Order Management Service</a> &gt; <a href="index.source.html" class="el_package">com.company.ordermanagement.service.impl</a> &gt; <span class="el_source">PaymentServiceImpl.java</span></div><h1>PaymentServiceImpl.java</h1><pre class="source lang-java linenums">package com.company.ordermanagement.service.impl;
+
+import com.company.ordermanagement.exception.ResourceNotFoundException;
+import com.company.ordermanagement.model.entity.Order;
+import com.company.ordermanagement.model.entity.OrderItem;
+import com.company.ordermanagement.model.entity.Payment;
+import com.company.ordermanagement.repository.OrderRepository;
+import com.company.ordermanagement.repository.PaymentRepository;
+import com.company.ordermanagement.service.PaymentService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+<span class="nc" id="L18">@Slf4j</span>
+@Service
+@RequiredArgsConstructor
+public class PaymentServiceImpl implements PaymentService {
+
+    private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
+
+    @Override
+    @Transactional
+    public Payment processPayment(UUID orderId, BigDecimal amount, String paymentMethod) {
+<span class="nc" id="L29">        Order order = orderRepository.findById(orderId)</span>
+<span class="nc" id="L30">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Order&quot;, orderId));</span>
+
+<span class="nc" id="L32">        Payment payment = Payment.builder()</span>
+<span class="nc" id="L33">                .order(order)</span>
+<span class="nc" id="L34">                .amount(amount)</span>
+<span class="nc" id="L35">                .status(Payment.PaymentStatus.PENDING)</span>
+<span class="nc" id="L36">                .paymentMethod(paymentMethod)</span>
+<span class="nc" id="L37">                .correlationId(UUID.randomUUID())</span>
+<span class="nc" id="L38">                .build();</span>
+
+        // Simulate gateway call
+<span class="nc" id="L41">        payment.setStatus(Payment.PaymentStatus.COMPLETED);</span>
+<span class="nc" id="L42">        payment.setGatewayReference(&quot;GW-&quot; + UUID.randomUUID().toString().substring(0, 8).toUpperCase());</span>
+
+<span class="nc" id="L44">        log.info(&quot;Payment processed: paymentId={}, orderId={}&quot;, payment.getId(), orderId);</span>
+<span class="nc" id="L45">        return paymentRepository.save(payment);</span>
+    }
+
+    @Override
+    @Transactional
+    // Activity 2 historical bug reference:
+    // The notes below describe the old failure mode, not the current state.
+    // This method is intentionally fixed in the repository.
+    // Payment is loaded via findByIdWithOrderAndLineItems which uses @EntityGraph
+    // to join order and lineItems — this works fine.
+    //
+    // BUT: If called from a context where the Payment was loaded in a different
+    // session (e.g., after deserialization from a retry queue), or if the
+    // @EntityGraph is removed, Order.getLineItems() returns an uninitialized
+    // Hibernate proxy. Calling .size() or iterating outside a transaction
+    // causes LazyInitializationException.
+    //
+    // This is the bug from Activity 2 — see docs/prompts/activity2-bug-fix.md
+    // Stack trace: PaymentServiceImpl.java:87 → Order.getLineItems() returns null
+    // Affects: multi-item, partially-shipped orders where the payment was loaded
+    // from a DLQ retry after the original session closed.
+    //
+    // FIX: Add @Transactional here AND add @EntityGraph on the repository method
+    // (already present on findByIdWithOrderAndLineItems).
+    public Payment processRefund(UUID paymentId) {
+<span class="nc" id="L70">        Payment payment = paymentRepository.findByIdWithOrderAndLineItems(paymentId)</span>
+<span class="nc" id="L71">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Payment&quot;, paymentId));</span>
+
+<span class="nc" id="L73">        Order order = payment.getOrder();</span>
+
+        // Line 87 — this is where the NPE/LazyInitializationException occurs
+        // when lineItems proxy is not initialized:
+<span class="nc" id="L77">        BigDecimal refundableAmount = order.getLineItems().stream()  // LINE 87</span>
+<span class="nc" id="L78">                .map(item -&gt; item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))</span>
+<span class="nc" id="L79">                .reduce(BigDecimal.ZERO, BigDecimal::add);</span>
+
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if (refundableAmount.compareTo(BigDecimal.ZERO) == 0) {</span>
+<span class="nc" id="L82">            throw new IllegalStateException(&quot;No refundable line items found for order: &quot; + order.getId());</span>
+        }
+
+<span class="nc" id="L85">        payment.setStatus(Payment.PaymentStatus.REFUNDED);</span>
+<span class="nc" id="L86">        payment.setAmount(refundableAmount.negate());</span>
+<span class="nc" id="L87">        log.info(&quot;Refund processed: paymentId={}, amount={}&quot;, paymentId, refundableAmount);</span>
+<span class="nc" id="L88">        return paymentRepository.save(payment);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Payment getPayment(UUID paymentId) {
+<span class="nc" id="L94">        return paymentRepository.findById(paymentId)</span>
+<span class="nc" id="L95">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Payment&quot;, paymentId));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

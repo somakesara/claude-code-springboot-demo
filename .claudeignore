@@ -1,0 +1,56 @@
+# ─── Secrets and credentials ───────────────────────────────────────────────────
+# Claude Code must never read these — not even to summarise them
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.jks
+*.pfx
+application-local.yml
+application-local.properties
+application-secrets.yml
+application-secrets.properties
+application-production.yml
+application-production.properties
+secrets/
+.aws/
+.gcp/
+.azure/
+
+# ─── Build artifacts ───────────────────────────────────────────────────────────
+# Binary and generated output — no reasoning value, huge token cost
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# ─── Dependency cache ──────────────────────────────────────────────────────────
+.m2/
+.gradle/
+node_modules/
+
+# ─── IDE metadata ──────────────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# ─── Logs ──────────────────────────────────────────────────────────────────────
+# May contain PII (emails, IPs, stack traces with user data)
+logs/
+*.log
+*.log.*
+
+# ─── OS noise ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ─── Coverage and test reports ─────────────────────────────────────────────────
+# HTML reports are not source — read the .java files instead
+target/site/
+target/jacoco.exec

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrderMapperImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Order Management Service</a> &gt; <a href="index.source.html" class="el_package">com.company.ordermanagement.mapper</a> &gt; <span class="el_source">OrderMapperImpl.java</span></div><h1>OrderMapperImpl.java</h1><pre class="source lang-java linenums">package com.company.ordermanagement.mapper;
+
+import com.company.ordermanagement.model.dto.response.OrderResponse;
+import com.company.ordermanagement.model.entity.Customer;
+import com.company.ordermanagement.model.entity.Order;
+import com.company.ordermanagement.model.entity.OrderItem;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import javax.annotation.processing.Generated;
+import org.springframework.stereotype.Component;
+
+@Generated(
+    value = &quot;org.mapstruct.ap.MappingProcessor&quot;,
+    date = &quot;2026-04-24T06:32:00+0530&quot;,
+    comments = &quot;version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.46.0.v20260407-0427, environment: Java 21.0.10 (Eclipse Adoptium)&quot;
+)
+@Component
+<span class="nc" id="L19">public class OrderMapperImpl implements OrderMapper {</span>
+
+    @Override
+    public OrderResponse toResponse(Order order) {
+<span class="nc bnc" id="L23" title="All 2 branches missed.">        if ( order == null ) {</span>
+<span class="nc" id="L24">            return null;</span>
+        }
+
+<span class="nc" id="L27">        OrderResponse.OrderResponseBuilder orderResponse = OrderResponse.builder();</span>
+
+<span class="nc" id="L29">        orderResponse.customerId( orderCustomerId( order ) );</span>
+<span class="nc" id="L30">        orderResponse.createdAt( order.getCreatedAt() );</span>
+<span class="nc" id="L31">        orderResponse.id( order.getId() );</span>
+<span class="nc" id="L32">        orderResponse.lineItems( orderItemListToLineItemResponseList( order.getLineItems() ) );</span>
+<span class="nc" id="L33">        orderResponse.status( order.getStatus() );</span>
+<span class="nc" id="L34">        orderResponse.total( order.getTotal() );</span>
+<span class="nc" id="L35">        orderResponse.updatedAt( order.getUpdatedAt() );</span>
+
+<span class="nc" id="L37">        orderResponse.customerName( order.getCustomer().getFirstName() + ' ' + order.getCustomer().getLastName() );</span>
+
+<span class="nc" id="L39">        return orderResponse.build();</span>
+    }
+
+    @Override
+    public OrderResponse.LineItemResponse toLineItemResponse(OrderItem item) {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if ( item == null ) {</span>
+<span class="nc" id="L45">            return null;</span>
+        }
+
+<span class="nc" id="L48">        OrderResponse.LineItemResponse.LineItemResponseBuilder lineItemResponse = OrderResponse.LineItemResponse.builder();</span>
+
+<span class="nc" id="L50">        lineItemResponse.id( item.getId() );</span>
+<span class="nc" id="L51">        lineItemResponse.productId( item.getProductId() );</span>
+<span class="nc" id="L52">        lineItemResponse.productName( item.getProductName() );</span>
+<span class="nc" id="L53">        lineItemResponse.productSku( item.getProductSku() );</span>
+<span class="nc" id="L54">        lineItemResponse.quantity( item.getQuantity() );</span>
+<span class="nc" id="L55">        lineItemResponse.unitPrice( item.getUnitPrice() );</span>
+
+<span class="nc" id="L57">        lineItemResponse.lineTotal( item.getUnitPrice().multiply(java.math.BigDecimal.valueOf(item.getQuantity())) );</span>
+
+<span class="nc" id="L59">        return lineItemResponse.build();</span>
+    }
+
+    private UUID orderCustomerId(Order order) {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if ( order == null ) {</span>
+<span class="nc" id="L64">            return null;</span>
+        }
+<span class="nc" id="L66">        Customer customer = order.getCustomer();</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if ( customer == null ) {</span>
+<span class="nc" id="L68">            return null;</span>
+        }
+<span class="nc" id="L70">        UUID id = customer.getId();</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">        if ( id == null ) {</span>
+<span class="nc" id="L72">            return null;</span>
+        }
+<span class="nc" id="L74">        return id;</span>
+    }
+
+    protected List&lt;OrderResponse.LineItemResponse&gt; orderItemListToLineItemResponseList(List&lt;OrderItem&gt; list) {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if ( list == null ) {</span>
+<span class="nc" id="L79">            return null;</span>
+        }
+
+<span class="nc" id="L82">        List&lt;OrderResponse.LineItemResponse&gt; list1 = new ArrayList&lt;OrderResponse.LineItemResponse&gt;( list.size() );</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        for ( OrderItem orderItem : list ) {</span>
+<span class="nc" id="L84">            list1.add( toLineItemResponse( orderItem ) );</span>
+        }
+
+<span class="nc" id="L87">        return list1;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

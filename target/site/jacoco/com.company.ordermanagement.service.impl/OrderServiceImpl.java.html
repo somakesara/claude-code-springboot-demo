@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrderServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Order Management Service</a> &gt; <a href="index.source.html" class="el_package">com.company.ordermanagement.service.impl</a> &gt; <span class="el_source">OrderServiceImpl.java</span></div><h1>OrderServiceImpl.java</h1><pre class="source lang-java linenums">package com.company.ordermanagement.service.impl;
+
+import com.company.ordermanagement.exception.OrderTotalExceededException;
+import com.company.ordermanagement.exception.ResourceNotFoundException;
+import com.company.ordermanagement.mapper.OrderMapper;
+import com.company.ordermanagement.model.dto.request.CreateOrderRequest;
+import com.company.ordermanagement.model.dto.response.OrderResponse;
+import com.company.ordermanagement.model.entity.Customer;
+import com.company.ordermanagement.model.entity.Order;
+import com.company.ordermanagement.model.entity.OrderItem;
+import com.company.ordermanagement.model.event.OrderCreatedEvent;
+import com.company.ordermanagement.repository.CustomerRepository;
+import com.company.ordermanagement.repository.OrderRepository;
+import com.company.ordermanagement.service.OrderService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+<span class="fc" id="L28">@Slf4j</span>
+@Service
+@RequiredArgsConstructor
+public class OrderServiceImpl implements OrderService {
+
+    private final OrderRepository orderRepository;
+    private final CustomerRepository customerRepository;
+    private final ApplicationEventPublisher eventPublisher;
+    private final OrderMapper orderMapper;
+
+    @Value(&quot;${order.max-total:50000}&quot;)
+    private BigDecimal maxOrderTotal;
+
+    @Override
+    @Transactional
+    public OrderResponse createOrder(CreateOrderRequest request) {
+<span class="fc" id="L44">        Customer customer = customerRepository.findById(request.getCustomerId())</span>
+<span class="fc" id="L45">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Customer&quot;, request.getCustomerId()));</span>
+
+<span class="fc" id="L47">        Order order = Order.builder()</span>
+<span class="fc" id="L48">                .customer(customer)</span>
+<span class="fc" id="L49">                .status(Order.OrderStatus.PENDING)</span>
+<span class="fc" id="L50">                .total(BigDecimal.ZERO)</span>
+<span class="fc" id="L51">                .correlationId(UUID.randomUUID())</span>
+<span class="fc" id="L52">                .build();</span>
+
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        for (CreateOrderRequest.LineItemRequest itemReq : request.getLineItems()) {</span>
+<span class="fc" id="L55">            OrderItem item = OrderItem.builder()</span>
+<span class="fc" id="L56">                    .productId(itemReq.getProductId())</span>
+<span class="fc" id="L57">                    .productSku(itemReq.getProductSku())</span>
+<span class="fc" id="L58">                    .productName(itemReq.getProductName())</span>
+<span class="fc" id="L59">                    .quantity(itemReq.getQuantity())</span>
+<span class="fc" id="L60">                    .unitPrice(itemReq.getUnitPrice())</span>
+<span class="fc" id="L61">                    .build();</span>
+<span class="fc" id="L62">            order.addLineItem(item);</span>
+        }
+
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (order.getTotal().compareTo(maxOrderTotal) &gt; 0) {</span>
+<span class="fc" id="L66">            throw new OrderTotalExceededException(order.getTotal(), maxOrderTotal);</span>
+        }
+
+<span class="fc" id="L69">        Order saved = orderRepository.save(order);</span>
+<span class="fc" id="L70">        log.info(&quot;Order created: orderId={}, customerId={}, total={}&quot;,</span>
+<span class="fc" id="L71">                saved.getId(), saved.getCustomer().getId(), saved.getTotal());</span>
+
+        // Publish AFTER commit — ApplicationEventPublisher + @TransactionalEventListener
+        // ensures Kafka is only called once the DB transaction has successfully committed.
+        // Never call kafkaTemplate.send() directly inside @Transactional — if the DB rolls
+        // back the message is already sent.
+<span class="fc" id="L77">        eventPublisher.publishEvent(buildOrderCreatedEvent(saved));</span>
+
+<span class="fc" id="L79">        return orderMapper.toResponse(saved);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderResponse getOrder(UUID orderId) {
+<span class="pc" id="L85">        Order order = orderRepository.findByIdWithLineItems(orderId)</span>
+<span class="pc" id="L86">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Order&quot;, orderId));</span>
+<span class="nc" id="L87">        return orderMapper.toResponse(order);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;OrderResponse&gt; getOrdersByCustomer(UUID customerId) {
+<span class="nc" id="L93">        return orderRepository.findAllByCustomerIdWithLineItems(customerId).stream()</span>
+<span class="nc" id="L94">                .map(orderMapper::toResponse)</span>
+<span class="nc" id="L95">                .toList();</span>
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse cancelOrder(UUID orderId) {
+<span class="fc" id="L101">        Order order = orderRepository.findByIdWithLineItems(orderId)</span>
+<span class="pc" id="L102">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Order&quot;, orderId));</span>
+
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        if (order.getStatus() == Order.OrderStatus.SHIPPED</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">                || order.getStatus() == Order.OrderStatus.DELIVERED) {</span>
+<span class="fc" id="L106">            throw new IllegalStateException(</span>
+<span class="fc" id="L107">                    &quot;Cannot cancel order in status: &quot; + order.getStatus());</span>
+        }
+
+<span class="nc" id="L110">        order.setStatus(Order.OrderStatus.CANCELLED);</span>
+<span class="nc" id="L111">        log.info(&quot;Order cancelled: orderId={}&quot;, orderId);</span>
+<span class="nc" id="L112">        return orderMapper.toResponse(orderRepository.save(order));</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Order getOrderEntity(UUID orderId) {
+<span class="nc" id="L118">        return orderRepository.findById(orderId)</span>
+<span class="nc" id="L119">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Order&quot;, orderId));</span>
+    }
+
+    private OrderCreatedEvent buildOrderCreatedEvent(Order order) {
+<span class="fc" id="L123">        List&lt;OrderCreatedEvent.LineItemSnapshot&gt; snapshots = order.getLineItems().stream()</span>
+<span class="fc" id="L124">                .map(item -&gt; OrderCreatedEvent.LineItemSnapshot.builder()</span>
+<span class="fc" id="L125">                        .eventId(UUID.randomUUID())</span>
+<span class="fc" id="L126">                        .timestamp(Instant.now())</span>
+<span class="fc" id="L127">                        .eventType(&quot;LINE_ITEM_SNAPSHOT&quot;)</span>
+<span class="fc" id="L128">                        .correlationId(order.getCorrelationId())</span>
+<span class="fc" id="L129">                        .productId(item.getProductId())</span>
+<span class="fc" id="L130">                        .productSku(item.getProductSku())</span>
+<span class="fc" id="L131">                        .quantity(item.getQuantity())</span>
+<span class="fc" id="L132">                        .unitPrice(item.getUnitPrice())</span>
+<span class="fc" id="L133">                        .build())</span>
+<span class="fc" id="L134">                .collect(Collectors.toList());</span>
+
+<span class="fc" id="L136">        return OrderCreatedEvent.builder()</span>
+<span class="fc" id="L137">                .eventId(UUID.randomUUID())</span>
+<span class="fc" id="L138">                .timestamp(Instant.now())</span>
+<span class="fc" id="L139">                .eventType(&quot;ORDER_CREATED&quot;)</span>
+<span class="fc" id="L140">                .correlationId(order.getCorrelationId())</span>
+<span class="fc" id="L141">                .orderId(order.getId())</span>
+<span class="fc" id="L142">                .customerId(order.getCustomer().getId())</span>
+<span class="fc" id="L143">                .total(order.getTotal())</span>
+<span class="fc" id="L144">                .lineItems(snapshots)</span>
+<span class="fc" id="L145">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

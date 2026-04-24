@@ -1,0 +1,106 @@
+# ─── Build output ──────────────────────────────────────────────────────────────
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ─── Maven wrapper ─────────────────────────────────────────────────────────────
+.mvn/wrapper/maven-wrapper.properties
+# Keep: .mvn/wrapper/maven-wrapper.jar (needed for wrapper bootstrap)
+
+# ─── IDE — IntelliJ IDEA ───────────────────────────────────────────────────────
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ─── IDE — Eclipse ─────────────────────────────────────────────────────────────
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+bin/
+
+# ─── IDE — VS Code ─────────────────────────────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+
+# ─── IDE — NetBeans ────────────────────────────────────────────────────────────
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ─── Spring Boot ───────────────────────────────────────────────────────────────
+spring-shell.log
+
+# ─── Secrets and credentials ───────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.pfx
+application-local.yml
+application-local.properties
+application-secrets.yml
+application-secrets.properties
+application-production.yml
+application-production.properties
+secrets/
+.aws/
+.gcp/
+.azure/
+
+# ─── Logs ──────────────────────────────────────────────────────────────────────
+logs/
+*.log
+*.log.*
+
+# ─── OS ────────────────────────────────────────────────────────────────────────
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+
+# ─── Docker ────────────────────────────────────────────────────────────────────
+.docker/
+
+# ─── Testcontainers ────────────────────────────────────────────────────────────
+.testcontainers.properties
+
+# ─── JaCoCo coverage reports ───────────────────────────────────────────────────
+# Generated in target/ (already excluded), but explicit for clarity
+jacoco.exec
+
+# ─── Flyway ────────────────────────────────────────────────────────────────────
+# Never ignore migration files — they are source-controlled by definition
+
+# ─── Misc ──────────────────────────────────────────────────────────────────────
+*.orig
+*.bak
+*.swp
+*.tmp
+HELP.md
