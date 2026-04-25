@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.4</version>
+        <version>3.5.0</version>
         <relativePath/>
     </parent>
 
@@ -18,11 +18,12 @@
     <description>Enterprise Spring Boot microservice — productivity framework demo</description>
 
     <properties>
+        <!-- Override on the command line: mvn package -Djava.version=21 -->
         <java.version>17</java.version>
-        <flyway.version>10.10.0</flyway.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <lombok.version>1.18.30</lombok.version>
-        <testcontainers.version>1.19.7</testcontainers.version>
+        <flyway.version>11.3.4</flyway.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
+        <lombok.version>1.18.36</lombok.version>
+        <testcontainers.version>1.20.4</testcontainers.version>
     </properties>
 
     <dependencies>
@@ -72,7 +73,6 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
-            <version>${flyway.version}</version>
         </dependency>
 
         <!-- MapStruct + Lombok -->
@@ -142,8 +142,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>17</source>
-                    <target>17</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>

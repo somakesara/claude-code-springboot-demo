@@ -1,7 +1,6 @@
 package com.company.ordermanagement.service;
 
 import com.company.ordermanagement.exception.ResourceNotFoundException;
-import com.company.ordermanagement.mapper.OrderMapper;
 import com.company.ordermanagement.model.entity.Customer;
 import com.company.ordermanagement.model.entity.Order;
 import com.company.ordermanagement.repository.OrderRepository;
@@ -25,10 +24,7 @@ import static org.mockito.Mockito.when;
 class OrderServiceTest {
 
     @Mock private OrderRepository orderRepository;
-    @Mock private OrderMapper orderMapper;
-
-    @InjectMocks
-    private OrderServiceImpl orderService;
+    @InjectMocks private OrderServiceImpl orderService;
 
     @Test
     void cancelOrder_shippedOrder_throwsIllegalStateException() {
@@ -38,7 +34,6 @@ class OrderServiceTest {
                 .customer(Customer.builder().firstName("A").lastName("B").build())
                 .total(BigDecimal.TEN)
                 .build();
-
         when(orderRepository.findByIdWithLineItems(orderId)).thenReturn(Optional.of(shippedOrder));
 
         assertThatThrownBy(() -> orderService.cancelOrder(orderId))
@@ -47,11 +42,11 @@ class OrderServiceTest {
     }
 
     @Test
-    void getOrder_unknownId_throwsResourceNotFoundException() {
+    void getOrderEntity_unknownId_throwsResourceNotFoundException() {
         UUID unknownId = UUID.randomUUID();
-        when(orderRepository.findByIdWithLineItems(unknownId)).thenReturn(Optional.empty());
+        when(orderRepository.findById(unknownId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> orderService.getOrder(unknownId))
+        assertThatThrownBy(() -> orderService.getOrderEntity(unknownId))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Order");
     }
