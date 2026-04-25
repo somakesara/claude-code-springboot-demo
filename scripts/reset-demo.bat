@@ -34,13 +34,10 @@ echo       Done.
 echo.
 
 REM ── Step 2: Git reset to clean baseline ──
-echo [2/4] Resetting git to clean baseline (demo-baseline branch)...
+echo [2/4] Resetting git to clean master baseline...
 git stash >nul 2>&1
-git checkout demo-baseline >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    echo       demo-baseline branch not found — using current HEAD.
-    git checkout master >nul 2>&1
-)
+git checkout master >nul 2>&1
+git checkout -- . >nul 2>&1
 git stash drop >nul 2>&1
 echo       Done.
 echo.
@@ -82,7 +79,7 @@ if "%ACTIVITY%"=="3" (
 if "%ACTIVITY%"=="4" (
     git checkout -B activity-4-migration >nul 2>&1
     echo       Branch: activity-4-migration
-    echo       Ready for: Java 11 + SB 2.7 to Java 17 + SB 3.2 migration walkthrough
+    echo       Ready for: Java/Spring Boot migration walkthrough (conceptual)
     echo       Prompt:    docs\prompts\activity4-migration.md
 )
 if "%ACTIVITY%"=="5" (

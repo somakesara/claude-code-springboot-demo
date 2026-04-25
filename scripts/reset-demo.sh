@@ -43,14 +43,10 @@ fi
 echo ""
 
 # ── Step 2: Git reset to clean baseline ────────────────────────────────────
-echo -e "${BOLD}[2/4]${RESET} Resetting git to clean baseline..."
+echo -e "${BOLD}[2/4]${RESET} Resetting git to clean master baseline..."
 git stash &>/dev/null || true
-if git show-ref --verify --quiet refs/heads/demo-baseline; then
-    git checkout demo-baseline &>/dev/null
-else
-    echo "      demo-baseline branch not found — using current HEAD."
-    git checkout master &>/dev/null || git checkout main &>/dev/null || true
-fi
+git checkout master &>/dev/null || git checkout main &>/dev/null || true
+git checkout -- . &>/dev/null || true
 git stash drop &>/dev/null || true
 echo -e "      ${GREEN}Done.${RESET}"
 echo ""
@@ -93,7 +89,7 @@ case "$ACTIVITY" in
 4)
     git checkout -B activity-4-migration &>/dev/null
     echo -e "      Branch:  ${CYAN}activity-4-migration${RESET}"
-    echo    "      Ready for: Java 11 + SB 2.7 → 17 + 3.2 migration walkthrough"
+    echo    "      Ready for: Java/Spring Boot migration walkthrough (conceptual)"
     echo    "      Prompt:    docs/prompts/activity4-migration.md"
     ;;
 5)
